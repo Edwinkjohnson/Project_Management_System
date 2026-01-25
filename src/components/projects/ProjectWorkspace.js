@@ -24,6 +24,13 @@ const ProjectWorkspace = () => {
 
         <div className="d-flex gap-2">
           <button
+  className="btn btn-outline-primary btn-sm"
+  onClick={() => navigate(`/projects/${project.id}/board`)}
+>
+  Open Kanban Board
+</button>
+
+          <button
             className="btn btn-outline-warning btn-sm"
             onClick={() => {
               const title = prompt("New title", project.title);

@@ -26,20 +26,28 @@ const ManageProjects = () => {
             </div>
 
             <div className="d-flex gap-2 align-items-start">
-              <button
-                className="btn btn-outline-secondary btn-sm"
-                onClick={() => navigate(`/projects/edit/${p.id}`)}
-              >
-                Edit
-              </button> 
+  <button
+    className="btn btn-primary btn-sm"
+    onClick={() => navigate(`/projects/${p.id}`)}
+  >
+    Open
+  </button>
 
-              <button
-                className="btn btn-outline-danger btn-sm"
-                onClick={() => deleteProject(p.id)}
-              >
-                Delete
-              </button>
-            </div>
+  <button
+    className="btn btn-outline-secondary btn-sm"
+    onClick={() => navigate(`/projects/edit/${p.id}`)}
+  >
+    Edit
+  </button> 
+
+  <button
+    className="btn btn-outline-danger btn-sm"
+    onClick={() => deleteProject(p.id)}
+  >
+    Delete
+  </button>
+</div>
+
           </div>
         </div>
       ))}

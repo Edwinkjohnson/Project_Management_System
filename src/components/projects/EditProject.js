@@ -22,7 +22,7 @@ const EditProject = () => {
 
   const saveProject = () => {
     updateProject(project.id, { title, description, deadline });
-    navigate("/projects/manage");
+    navigate("/projects");
   };
 
   const addNewTask = () => {

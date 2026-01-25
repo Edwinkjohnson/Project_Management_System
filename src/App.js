@@ -21,6 +21,7 @@ import ProjectWorkspace from "./components/projects/ProjectWorkspace";
 import ManageProjects from "./components/projects/ManageProjects";
 import EditProject from "./components/projects/EditProject";
 import Dashboard from "./components/dashboard/Dashboard";
+import KanbanBoard from "./components/tasks/KanbanBoard";
 
 
 
@@ -41,6 +42,8 @@ function App() {
         <Route path="/admin/users" element={<MainLayout><UserManagement /></MainLayout>} />
         <Route path="/projects" element={<ManageProjects />} />
         <Route path="/projects/edit/:id" element={<EditProject />} />
+        <Route path="/projects/:id/board" element={<KanbanBoard />} />
+
         
 
 

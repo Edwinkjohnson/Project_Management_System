@@ -1,84 +1,135 @@
-import { useState } from "react";
 import { useProjects } from "../../context/ProjectContext";
 import { useUsers } from "../../context/UserContext";
 import { useTasks } from "../../context/TaskContext";
+import { useNavigate } from "react-router-dom";
 
 const AdminDashboard = () => {
-  const { projects, updateProject, deleteProject } = useProjects();
+  const { projects } = useProjects();
   const { users } = useUsers();
   const { tasks } = useTasks();
+  const navigate = useNavigate();
 
-  const [editing, setEditing] = useState(null);
-  const [form, setForm] = useState({ title: "", description: "", deadline: "" });
+  const today = new Date();
 
-  const startEdit = (p) => {
-    setEditing(p.id);
-    setForm(p);
-  };
+  const overdueProjects = projects.filter(
+    p => new Date(p.deadline) < today
+  );
 
-  const saveEdit = () => {
-    updateProject(editing, form);
-    setEditing(null);
-  };
+  const completedTasks = tasks.filter(t => t.status === "Completed").length;
 
   return (
-    <div className="container mt-4">
-      <h2>Admin Control Panel</h2>
+    <div className="container-fluid">
 
-      <div className="row my-4 text-center">
-        <div className="col">Projects: {projects.length}</div>
-        <div className="col">Users: {users.length}</div>
-        <div className="col">Tasks: {tasks.length}</div>
+      {/* Header */}
+      <div className="mb-4">
+        <h2 className="fw-bold">Admin Control Panel</h2>
+        <p className="text-muted">
+          Monitor projects, users, and system performance
+        </p>
       </div>
 
-      <div className="card p-3">
-        <h5>All Projects</h5>
+      {/* KPI Cards */}
+      <div className="row g-3 mb-4">
 
-        {projects.map(p => (
-          <div key={p.id} className="border p-3 mb-2 rounded">
+        <div className="col-md-3">
+          <div className="card shadow-sm p-3 text-center">
+            <h6 className="text-muted">Total Projects</h6>
+            <h2>{projects.length}</h2>
+          </div>
+        </div>
 
-            {editing === p.id ? (
-              <>
-                <input className="form-control mb-2"
-                  value={form.title}
-                  onChange={e => setForm({ ...form, title: e.target.value })}
-                />
-                <textarea className="form-control mb-2"
-                  value={form.description}
-                  onChange={e => setForm({ ...form, description: e.target.value })}
-                />
-                <input type="date" className="form-control mb-2"
-                  value={form.deadline}
-                  onChange={e => setForm({ ...form, deadline: e.target.value })}
-                />
+        <div className="col-md-3">
+          <div className="card shadow-sm p-3 text-center">
+            <h6 className="text-muted">Total Tasks</h6>
+            <h2>{tasks.length}</h2>
+          </div>
+        </div>
 
-                <button className="btn btn-success btn-sm me-2" onClick={saveEdit}>
-                  Save
-                </button>
-                <button className="btn btn-secondary btn-sm" onClick={() => setEditing(null)}>
-                  Cancel
-                </button>
-              </>
-            ) : (
-              <>
-                <strong>{p.title}</strong>
-                <div>{p.description}</div>
-                <small>Deadline: {p.deadline}</small>
+        <div className="col-md-3">
+          <div className="card shadow-sm p-3 text-center">
+            <h6 className="text-muted">Completed Tasks</h6>
+            <h2>{completedTasks}</h2>
+          </div>
+        </div>
 
-                <div className="mt-2">
-                  <button className="btn btn-warning btn-sm me-2" onClick={() => startEdit(p)}>
-                    Edit
-                  </button>
-                  <button className="btn btn-danger btn-sm" onClick={() => deleteProject(p.id)}>
-                    Delete
-                  </button>
-                </div>
-              </>
+        <div className="col-md-3">
+          <div className="card shadow-sm p-3 text-center">
+            <h6 className="text-muted">Users</h6>
+            <h2>{users.length}</h2>
+          </div>
+        </div>
+
+      </div>
+
+      {/* Alerts + Actions */}
+      <div className="row g-4 mb-4">
+
+        {/* Overdue Projects */}
+        <div className="col-md-6">
+          <div className="card shadow-sm p-3 h-100">
+            <h5 className="mb-3">⚠️ Overdue Projects</h5>
+
+            {overdueProjects.length === 0 && (
+              <p className="text-muted">No overdue projects 🎉</p>
             )}
 
+            {overdueProjects.map(p => (
+              <div key={p.id} className="border-bottom py-2">
+                <strong>{p.title}</strong>
+                <div className="text-danger small">
+                  Deadline: {p.deadline}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Quick Actions */}
+        <div className="col-md-6">
+          <div className="card shadow-sm p-3 h-100">
+            <h5 className="mb-3">Quick Actions</h5>
+
+            <div className="d-grid gap-2">
+              <button
+                className="btn btn-primary"
+                onClick={() => navigate("/projects")}
+              >
+                Manage Projects
+              </button>
+
+              <button
+                className="btn btn-outline-primary"
+                onClick={() => navigate("/admin/users")}
+              >
+                Manage Users
+              </button>
+
+              <button
+                className="btn btn-outline-secondary"
+                onClick={() => navigate("/analytics")}
+              >
+                View Analytics
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      {/* Recent Projects */}
+      <div className="card shadow-sm p-3">
+        <h5 className="mb-3">Recent Projects</h5>
+
+        {projects.slice(0, 5).map(p => (
+          <div key={p.id} className="border-bottom py-2">
+            <strong>{p.title}</strong>
+            <div className="small text-muted">
+              Deadline: {p.deadline}
+            </div>
           </div>
         ))}
       </div>
+
     </div>
   );
 };

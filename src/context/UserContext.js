@@ -1,17 +1,25 @@
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useState, useEffect } from "react";
+import * as userApi from "../api/userApi";
+import { useAuth } from "./AuthContext";
 
 const UserContext = createContext();
 
-const initialUsers = [
-  { id: 1, name: "Admin", email: "admin@team.com", role: "admin" },
-  { id: 2, name: "Manager", email: "manager@team.com", role: "manager" },
-  { id: 3, name: "Alice", email: "alice@team.com", role: "member" },
-  { id: 4, name: "Bob", email: "bob@team.com", role: "member" },
-  { id: 5, name: "Charlie", email: "charlie@team.com", role: "member" }
-];
-
 export const UserProvider = ({ children }) => {
-  const [users] = useState(initialUsers);
+  const [users, setUsers] = useState([]);
+  const { user } = useAuth();
+
+  useEffect(() => {
+    const loadUsers = async () => {
+      if (!user) return;
+      try {
+        const res = await userApi.fetchUsers();
+        setUsers(res.data);
+      } catch (error) {
+        console.error("Error fetching users:", error);
+      }
+    };
+    loadUsers();
+  }, [user]);
 
   return (
     <UserContext.Provider value={{ users }}>

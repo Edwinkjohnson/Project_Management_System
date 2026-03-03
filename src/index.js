@@ -1,7 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import App from "./App";
-import "./index.css"; 
+import "./index.css";
 import "./utils/ChartConfig";
 import { UserProvider } from "./context/UserContext";
 import { AuthProvider } from "./context/AuthContext";
@@ -13,8 +13,8 @@ const root = ReactDOM.createRoot(document.getElementById("root"));
 
 root.render(
   <React.StrictMode>
-    <UserProvider>
-      <AuthProvider>
+    <AuthProvider>
+      <UserProvider>
         <ProjectProvider>
           <TaskProvider>
             <NotificationProvider>
@@ -22,7 +22,7 @@ root.render(
             </NotificationProvider>
           </TaskProvider>
         </ProjectProvider>
-      </AuthProvider>
-    </UserProvider>
+      </UserProvider>
+    </AuthProvider>
   </React.StrictMode>
 );

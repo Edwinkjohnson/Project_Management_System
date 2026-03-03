@@ -15,20 +15,18 @@ const KanbanBoard = () => {
   const { user } = useAuth();
 
   // Filter tasks by project
-  const projectTasks = tasks.filter(
-    (t) => t.projectId === Number(id)
-  );
+  const projectTasks = tasks[id] || [];
 
   // Role-based visibility
   const visibleTasks =
-    user.role === "manager"
+    user.role === "manager" || user.role === "admin"
       ? projectTasks
-      : projectTasks.filter((t) => t.assigneeId === user.id);
+      : projectTasks.filter((t) => t.assigneeId === user.id || t.assigneeId?._id === user.id);
 
   const onDragEnd = (result) => {
     if (!result.destination) return;
 
-    const taskId = Number(result.draggableId);
+    const taskId = result.draggableId;
     const newStatus = result.destination.droppableId;
 
     updateTask(taskId, { status: newStatus });
@@ -84,8 +82,8 @@ const KanbanBoard = () => {
                       >
                         {columnTasks.map((task, index) => (
                           <Draggable
-                            key={task.id}
-                            draggableId={task.id.toString()}
+                            key={task._id}
+                            draggableId={task._id.toString()}
                             index={index}
                           >
                             {(provided, snapshot) => (
@@ -110,9 +108,7 @@ const KanbanBoard = () => {
                                 {/* Task Meta */}
                                 <div className="d-flex justify-content-between align-items-center">
                                   <span className="badge bg-light text-dark">
-                                    {task.assigneeId
-                                      ? `User #${task.assigneeId}`
-                                      : "Unassigned"}
+                                    {task.assigneeId?.name || (task.assigneeId === user.id || task.assigneeId?._id === user.id ? user.name : "Unassigned")}
                                   </span>
 
                                   <span

@@ -1,16 +1,26 @@
+import { useEffect } from "react";
 import { useTasks } from "../../context/TaskContext";
 import { useAuth } from "../../context/AuthContext";
 
 const TaskBoard = () => {
-  const { tasks, deleteTask, updateTask } = useTasks();
+  const { allTasks: tasks, deleteTask, updateTask, loadAllTasks } = useTasks();
   const { user } = useAuth();
+
+  useEffect(() => {
+    loadAllTasks();
+  }, [loadAllTasks]);
 
   if (!user) return null;
 
+  const isManager = user.role === "manager";
+  const isAdmin = user.role === "admin";
+
   const visibleTasks =
-    user.role === "manager"
+    isAdmin
       ? tasks
-      : tasks.filter(t => t.assignee === user.name);
+      : isManager
+        ? tasks // Managers see all tasks fetched for their projects
+        : tasks.filter(t => t.assigneeId?._id === user.id || t.assigneeId === user.id);
 
   const cycleStatus = (status) => {
     if (status === "Pending") return "In Progress";
@@ -20,43 +30,49 @@ const TaskBoard = () => {
 
   return (
     <div className="container mt-4">
-      <h4>My Tasks</h4>
+      <h4>{(isManager || isAdmin) ? "Team Tasks" : "My Tasks"}</h4>
 
       {visibleTasks.length === 0 && <p>No tasks available.</p>}
 
       {visibleTasks.map(t => (
-        <div key={t.id} className="card p-3 mb-3 shadow-sm">
+        <div key={t._id} className="card p-3 mb-3 shadow-sm border-start border-4 border-primary">
 
           <div className="d-flex justify-content-between align-items-center">
-            <strong>{t.title}</strong>
+            <div>
+              <h5 className="mb-1">{t.title}</h5>
+              <span className="badge bg-info text-dark mb-2">
+                Project: {t.projectId?.title || "Unknown Project"}
+              </span>
+            </div>
 
             <button
-              className={`btn btn-sm ${
-                t.status === "Pending"
-                  ? "btn-secondary"
-                  : t.status === "In Progress"
+              className={`btn btn-sm ${t.status === "Pending"
+                ? "btn-secondary"
+                : t.status === "In Progress"
                   ? "btn-warning"
                   : "btn-success"
-              }`}
-              onClick={() => updateTask(t.id, { status: cycleStatus(t.status) })}
+                }`}
+              onClick={() => updateTask(t._id, { status: cycleStatus(t.status) })}
             >
               {t.status}
             </button>
           </div>
 
-          <div className="mt-2 text-muted">
-            Assigned to: {t.assignee || "Unassigned"}
-          </div>
+          {(!(isManager || isAdmin)) ? null : (
+            <div className="mt-2 text-muted">
+              <strong>Assigned to:</strong> {t.assigneeId?.name || (t.assigneeId?._id === user.id || t.assigneeId === user.id ? user.name : "Unassigned")}
+            </div>
+          )}
 
           {/* 🆕 Due Date */}
-          <div className="mt-2">
-            <label className="form-label mb-1">Due Date</label>
+          <div className="mt-2 text-start">
+            <label className="form-label mb-1 small fw-bold">Due Date</label>
             <input
               type="date"
               className="form-control form-control-sm"
-              value={t.dueDate || ""}
+              value={t.dueDate ? t.dueDate.split('T')[0] : ""}
               onChange={(e) =>
-                updateTask(t.id, { dueDate: e.target.value })
+                updateTask(t._id, { dueDate: e.target.value })
               }
             />
           </div>
@@ -68,7 +84,7 @@ const TaskBoard = () => {
                 className="btn btn-sm btn-danger"
                 onClick={() => {
                   if (window.confirm("Delete this task?")) {
-                    deleteTask(t.id);
+                    deleteTask(t._id, t.projectId?._id || t.projectId);
                   }
                 }}
               >

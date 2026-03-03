@@ -2,10 +2,10 @@ import { useTasks } from "../../context/TaskContext";
 import { useAuth } from "../../context/AuthContext";
 
 const MemberDashboard = () => {
-  const { tasks } = useTasks();
+  const { allTasks: tasks } = useTasks();
   const { user } = useAuth();
 
-  const myTasks = tasks.filter(t => t.assignee === user.name);
+  const myTasks = tasks.filter(t => t.assigneeId === user.id || t.assigneeId?._id === user.id);
 
   const completed = myTasks.filter(t => t.status === "Completed").length;
   const percent = myTasks.length
@@ -15,7 +15,7 @@ const MemberDashboard = () => {
   return (
     <div className="container mt-4">
 
-      <h3>Welcome, {user.name} 👋</h3>
+      <h3>Welcome, {user.name} </h3>
       <p className="text-muted">Your personal productivity workspace</p>
 
       <div className="row g-3 mb-4">

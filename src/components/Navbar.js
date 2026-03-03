@@ -7,7 +7,7 @@ const Navbar = () => {
 
   return (
     <nav className="navbar navbar-expand-lg navbar-light bg-light px-4 shadow-sm">
-      <Link className="navbar-brand fw-bold" to="/">ProjectManagerX</Link>
+      <Link className="navbar-brand fw-bold" to="/">Opero</Link>
 
       <div className="ms-auto d-flex gap-2">
         {!user ? (

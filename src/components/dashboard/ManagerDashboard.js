@@ -2,18 +2,25 @@ import { useProjects } from "../../context/ProjectContext";
 import { useTasks } from "../../context/TaskContext";
 import { useUsers } from "../../context/UserContext";
 import { useAuth } from "../../context/AuthContext";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
-const Dashboard = () => {
+const ManagerDashboard = () => {
   const { projects } = useProjects();
-  const { tasks } = useTasks();
+  const { allTasks: tasks } = useTasks();
   const { users } = useUsers();
   const { user } = useAuth();
+  const navigate = useNavigate();
 
+  // ✅ SAFETY CHECK (PREVENT BLANK SCREEN)
+  if (!user) {
+    return <div className="text-center mt-5">Loading dashboard...</div>;
+  }
+
+  // ✅ Correct task filtering
   const myTasks =
     user.role === "manager"
       ? tasks
-      : tasks.filter(t => t.assignee === user.name);
+      : tasks.filter(t => t.assigneeId === user.id || t.assigneeId?._id === user.id);
 
   const completedTasks = tasks.filter(t => t.status === "Completed").length;
   const completionRate = tasks.length
@@ -56,7 +63,6 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* New Section */}
       <div className="row g-4">
 
         {/* Recent Projects */}
@@ -64,12 +70,23 @@ const Dashboard = () => {
           <div className="card p-3 shadow-sm h-100">
             <h5>Recent Projects</h5>
             {projects.slice(0, 5).map(p => (
-              <div key={p.id} className="border-bottom py-2">
-                <strong>{p.title}</strong>
-                <div className="text-muted small">Deadline: {p.deadline}</div>
+              <div key={p._id || p.id} className="border-bottom py-2 d-flex justify-content-between align-items-center">
+                <div>
+                  <strong>{p.title}</strong>
+                  <div className="text-muted small">
+                    Deadline: {p.deadline || "N/A"}
+                  </div>
+                </div>
+                <div className="d-flex gap-1">
+                  <button className="btn btn-sm btn-link p-0 text-primary" onClick={() => navigate(`/projects/${p._id}/tasks`)} title="Tasks"><i className="bi bi-list-task"></i></button>
+                  <button className="btn btn-sm btn-link p-0 text-warning" onClick={() => navigate(`/projects/${p._id}/board`)} title="Kanban"><i className="bi bi-kanban"></i></button>
+                  <button className="btn btn-sm btn-link p-0 text-success" onClick={() => navigate(`/chat/${p._id}`)} title="Chat"><i className="bi bi-chat-dots"></i></button>
+                </div>
               </div>
             ))}
-            {projects.length === 0 && <p className="text-muted">No projects yet</p>}
+            {projects.length === 0 && (
+              <p className="text-muted">No projects yet</p>
+            )}
           </div>
         </div>
 
@@ -78,14 +95,16 @@ const Dashboard = () => {
           <div className="card p-3 shadow-sm h-100">
             <h5>My Active Tasks</h5>
             {myTasks.slice(0, 5).map(t => (
-              <div key={t.id} className="border-bottom py-2">
+              <div key={t._id || t.id} className="border-bottom py-2">
                 <strong>{t.title}</strong>
                 <div className="small">
                   Status: <span className="fw-bold">{t.status}</span>
                 </div>
               </div>
             ))}
-            {myTasks.length === 0 && <p className="text-muted">No active tasks</p>}
+            {myTasks.length === 0 && (
+              <p className="text-muted">No active tasks</p>
+            )}
           </div>
         </div>
 
@@ -112,9 +131,15 @@ const Dashboard = () => {
           <div className="card p-3 shadow-sm">
             <h5>Quick Actions</h5>
             <div className="d-grid gap-2 mt-2">
-              <Link to="/projects/new" className="btn btn-primary btn-sm">+ Create Project</Link>
-              <Link to="/tasks" className="btn btn-outline-primary btn-sm">View Tasks</Link>
-              <Link to="/team-chat" className="btn btn-outline-secondary btn-sm">Open Team Chat</Link>
+              <Link to="/projects" className="btn btn-primary btn-sm">
+                Manage Projects
+              </Link>
+              <Link to="/projects/new" className="btn btn-outline-primary btn-sm">
+                + Create Project
+              </Link>
+              <Link to="/chat" className="btn btn-outline-secondary btn-sm">
+                Open Team Chat
+              </Link>
             </div>
           </div>
         </div>
@@ -124,4 +149,4 @@ const Dashboard = () => {
   );
 };
 
-export default Dashboard;
+export default ManagerDashboard;

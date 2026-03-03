@@ -6,7 +6,7 @@ import { useNavigate } from "react-router-dom";
 const AdminDashboard = () => {
   const { projects } = useProjects();
   const { users } = useUsers();
-  const { tasks } = useTasks();
+  const { allTasks: tasks } = useTasks();
   const navigate = useNavigate();
 
   const today = new Date();
@@ -74,7 +74,7 @@ const AdminDashboard = () => {
             )}
 
             {overdueProjects.map(p => (
-              <div key={p.id} className="border-bottom py-2">
+              <div key={p._id} className="border-bottom py-2">
                 <strong>{p.title}</strong>
                 <div className="text-danger small">
                   Deadline: {p.deadline}
@@ -121,7 +121,7 @@ const AdminDashboard = () => {
         <h5 className="mb-3">Recent Projects</h5>
 
         {projects.slice(0, 5).map(p => (
-          <div key={p.id} className="border-bottom py-2">
+          <div key={p._id} className="border-bottom py-2">
             <strong>{p.title}</strong>
             <div className="small text-muted">
               Deadline: {p.deadline}

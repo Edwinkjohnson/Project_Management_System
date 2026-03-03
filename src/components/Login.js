@@ -5,22 +5,28 @@ import { useAuth } from "../context/AuthContext";
 
 const Login = () => {
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState(""); // UI only
+  const [password, setPassword] = useState("");
   const navigate = useNavigate();
   const { login } = useAuth();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // 🔐 Real login using AuthContext users
-    const success = login(email);
+    try {
+      await login(email, password);
 
-    if (success === false) {
-      alert("User not found");
-      return;
+      const storedUser = JSON.parse(localStorage.getItem("user"));
+
+      if (storedUser.role === "admin") {
+        navigate("/dashboard");
+      } else if (storedUser.role === "manager") {
+        navigate("/dashboard");
+      } else {
+        navigate("/dashboard");
+      }
+    } catch (err) {
+      alert("Invalid credentials");
     }
-
-    navigate("/dashboard");
   };
 
   return (

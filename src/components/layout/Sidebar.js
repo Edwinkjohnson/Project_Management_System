@@ -13,22 +13,22 @@ const Sidebar = () => {
   ];
 
   const manager = [
-    { label: "Projects", path: "/projects" },
+    { label: "Manage Projects", path: "/projects" },
     { label: "Team", path: "/team" },
-    { label: "Reports", path: "/analytics" },
+    { label: "Analytics", path: "/analytics" },
   ];
 
   const admin = [
     { label: "Admin Panel", path: "/admin" },
     { label: "User Management", path: "/admin/users" }
-    ];
+  ];
 
   const menu =
     user.role === "admin"
-      ? [...common, ...manager, ...admin]
+      ? [...common, ...manager.filter(item => item.label !== "Team"), ...admin]
       : user.role === "manager"
-      ? [...common, ...manager]
-      : common;
+        ? [...common, ...manager]
+        : common;
 
   return (
     <div className="bg-dark text-white p-3 vh-100 d-flex flex-column shadow-lg" style={{ width: "230px" }}>
@@ -39,12 +39,11 @@ const Sidebar = () => {
           key={item.path}
           to={item.path}
           className={({ isActive }) =>
-  `d-block mb-2 px-3 py-2 rounded text-decoration-none fw-semibold ${
-    isActive
-      ? "bg-primary text-white shadow-sm"
-      : "text-white opacity-75"
-  }`
-}
+            `d-block mb-2 px-3 py-2 rounded text-decoration-none fw-semibold ${isActive
+              ? "bg-primary text-white shadow-sm"
+              : "text-white opacity-75"
+            }`
+          }
 
         >
           {item.label}

@@ -1,15 +1,17 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useProjects } from "../../context/ProjectContext";
 import { useTasks } from "../../context/TaskContext";
+import { useAuth } from "../../context/AuthContext";
 
 const ProjectWorkspace = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { projects, updateProject, deleteProject } = useProjects();
   const { tasks } = useTasks();
+  const { user } = useAuth();
 
-  const project = projects.find(p => p.id === Number(id));
-  const projectTasks = tasks.filter(t => t.projectId === Number(id));
+  const project = projects.find(p => p._id === id);
+  const projectTasks = tasks[id] || [];
 
   if (!project) return <p className="p-4">Project not found</p>;
 
@@ -24,11 +26,11 @@ const ProjectWorkspace = () => {
 
         <div className="d-flex gap-2">
           <button
-  className="btn btn-outline-primary btn-sm"
-  onClick={() => navigate(`/projects/${project.id}/board`)}
->
-  Open Kanban Board
-</button>
+            className="btn btn-outline-primary btn-sm"
+            onClick={() => navigate(`/projects/${project._id}/board`)}
+          >
+            Open Kanban Board
+          </button>
 
           <button
             className="btn btn-outline-warning btn-sm"
@@ -36,7 +38,7 @@ const ProjectWorkspace = () => {
               const title = prompt("New title", project.title);
               const deadline = prompt("New deadline", project.deadline);
               if (title && deadline) {
-                updateProject(project.id, { title, deadline });
+                updateProject(project._id, { title, deadline });
               }
             }}
           >
@@ -46,7 +48,7 @@ const ProjectWorkspace = () => {
           <button
             className="btn btn-outline-danger btn-sm"
             onClick={() => {
-              deleteProject(project.id);
+              deleteProject(project._id);
               navigate("/dashboard");
             }}
           >
@@ -64,10 +66,10 @@ const ProjectWorkspace = () => {
       )}
 
       {projectTasks.map(t => (
-        <div key={t.id} className="card p-2 mb-2">
+        <div key={t._id} className="card p-2 mb-2">
           <strong>{t.title}</strong>
           <div>Status: {t.status}</div>
-          <div>Assigned to: {t.assignee || "Unassigned"}</div>
+          <div>Assigned to: {t.assigneeId?.name || (t.assigneeId === user.id || t.assigneeId?._id === user.id ? user.name : "Unassigned")}</div>
         </div>
       ))}
 

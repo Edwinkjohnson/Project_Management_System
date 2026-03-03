@@ -1,126 +1,177 @@
-import { Link } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { useProjects } from "../../context/ProjectContext";
 import { useAuth } from "../../context/AuthContext";
 import { useTasks } from "../../context/TaskContext";
 import { useUsers } from "../../context/UserContext";
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 
 const ProjectList = () => {
-  const { projects = [], deleteProject } = useProjects();
-  const { tasks = [], addTask, updateTask } = useTasks();
+  const { id } = useParams();
+  const { projects: allProjects = [], deleteProject, loading: projectsLoading } = useProjects();
+  const { tasks = {}, addTask, updateTask, loadTasks, loading: tasksLoading } = useTasks();
   const { user } = useAuth();
-  const isProjectAdmin = user.role === "manager" || user.role === "admin";
   const { users = [] } = useUsers();
 
+  const projects = useMemo(() => {
+    if (!id) return allProjects;
+    return allProjects.filter(p => p._id === id);
+  }, [allProjects, id]);
 
   const [newTaskTitle, setNewTaskTitle] = useState("");
+  const [activeProjectId, setActiveProjectId] = useState(id || null);
+
+  useEffect(() => {
+    if (id) {
+      setActiveProjectId(id);
+      if (!tasks[id]) {
+        loadTasks(id);
+      }
+    }
+  }, [id, tasks, loadTasks]);
 
   if (!user) return <div className="container mt-4">Please login</div>;
+  if (projectsLoading) return <div className="container mt-4 text-center">Loading projects...</div>;
 
-  // 🔐 Project visibility
-  const visibleProjects =
-    isProjectAdmin
-      ? projects.filter(p => p.managerId === user.id)
-      : projects.filter(p => p.team?.includes(user.id));
+  const handleLoadTasks = (projectId) => {
+    if (activeProjectId === projectId) {
+      setActiveProjectId(null);
+    } else {
+      setActiveProjectId(projectId);
+      if (!tasks[projectId]) {
+        loadTasks(projectId);
+      }
+    }
+  };
 
   const cycleStatus = (status) =>
     status === "Pending" ? "In Progress" : status === "In Progress" ? "Completed" : "Pending";
 
   return (
     <div className="container mt-4">
-      <div className="d-flex justify-content-between align-items-center">
-        <h4>Projects</h4>
-        {user.role === "manager" && (
+      <div className="d-flex justify-content-between align-items-center mb-4">
+        <h4 className="fw-bold">My Projects</h4>
+        {(user.role === "manager" || user.role === "admin") && (
           <Link to="/projects/new" className="btn btn-primary">+ New Project</Link>
         )}
       </div>
 
-      {visibleProjects.length === 0 && <p className="mt-3">No projects available.</p>}
+      {projects.length === 0 && <p className="mt-3 text-muted">No projects available.</p>}
 
-      {visibleProjects.map(p => {
-        const visibleTasks =
-          user.role === "manager"
-            ? tasks.filter(t => t.projectId === p.id)
-            : tasks.filter(t => t.projectId === p.id && t.assigneeId === user.id);
+      <div className="row g-4">
+        {projects.map(p => {
+          const projectTasks = tasks[p._id] || [];
+          const isActive = activeProjectId === p._id;
 
-        return (
-          <div key={p.id} className="list-group-item mt-3">
+          return (
+            <div key={p._id} className="col-12">
+              <div className={`card border-0 shadow-sm ${isActive ? 'ring-primary' : ''}`}>
+                <div className="card-body">
+                  <div className="d-flex justify-content-between align-items-start">
+                    <div onClick={() => handleLoadTasks(p._id)} style={{ cursor: 'pointer' }}>
+                      <h5 className="fw-bold mb-1">{p.title}</h5>
+                      <p className="text-muted small mb-2">{p.description}</p>
+                      <div className="d-flex gap-3 small text-muted">
+                        <span><i className="bi bi-calendar-event me-1"></i> {p.deadline ? new Date(p.deadline).toLocaleDateString() : 'No deadline'}</span>
+                        <span><i className="bi bi-person me-1"></i> {p.createdBy?.name || 'Unknown'}</span>
+                      </div>
+                    </div>
 
-            <h6>{p.title}</h6>
-            <p>{p.description}</p>
-            <small>Deadline: {p.deadline}</small>
+                    {(user.role === "admin" || (user.role === "manager" && p.createdBy?._id === user.id)) && (
+                      <button
+                        className="btn btn-sm btn-outline-danger border-0"
+                        onClick={(e) => { e.stopPropagation(); deleteProject(p._id); }}
+                      >
+                        <i className="bi bi-trash"></i>
+                      </button>
+                    )}
+                  </div>
 
-            {user.role === "manager" && (
-              <div className="mt-2">
-                <button className="btn btn-danger btn-sm" onClick={() => deleteProject(p.id)}>Delete</button>
-              </div>
-            )}
+                  {isActive && (
+                    <div className="mt-4 pt-3 border-top fade-in">
+                      <div className="d-flex justify-content-between align-items-center mb-3">
+                        <h6 className="fw-bold mb-0">Tasks ({projectTasks.length})</h6>
+                        {(user.role === "manager" || user.role === "admin") && (
+                          <form
+                            className="d-flex gap-2"
+                            onSubmit={e => {
+                              e.preventDefault();
+                              addTask({
+                                projectId: p._id,
+                                title: newTaskTitle,
+                                status: "Pending"
+                              });
+                              setNewTaskTitle("");
+                            }}
+                          >
+                            <input
+                              placeholder="New task..."
+                              className="form-control form-control-sm"
+                              value={newTaskTitle}
+                              onChange={e => setNewTaskTitle(e.target.value)}
+                              required
+                            />
+                            <button className="btn btn-primary btn-sm">Add</button>
+                          </form>
+                        )}
+                      </div>
 
-            <hr />
-            <h6>Tasks</h6>
+                      {tasksLoading && !projectTasks.length && <div className="text-center py-2"><div className="spinner-border spinner-border-sm text-primary"></div></div>}
 
-            {user.role === "manager" && (
-              <form onSubmit={e => {
-                e.preventDefault();
-                addTask({
-                  id: Date.now(),
-                  projectId: p.id,
-                  title: newTaskTitle,
-                  status: "Pending",
-                  assigneeId: null
-                });
-                setNewTaskTitle("");
-              }}>
-                <div className="d-flex gap-2">
-                  <input className="form-control" value={newTaskTitle}
-                    onChange={e => setNewTaskTitle(e.target.value)} required />
-                  <button className="btn btn-primary btn-sm">Add</button>
-                </div>
-              </form>
-            )}
+                      <div className="list-group list-group-flush">
+                        {projectTasks.map(t => (
+                          <div key={t._id} className="list-group-item px-0 py-2 d-flex justify-content-between align-items-center border-0">
+                            <div>
+                              <div className="fw-medium">{t.title}</div>
+                              {t.assigneeId && (
+                                <div className="small text-muted">
+                                  {t.assigneeId?.name || users.find(u => u._id === (t.assigneeId?._id || t.assigneeId))?.name || "Unknown"}
+                                </div>
+                              )}
+                            </div>
 
-            {visibleTasks.map(t => (
-              <div key={t.id} className="border rounded p-2 mt-2 d-flex justify-content-between">
+                            <div className="d-flex gap-2 align-items-center">
+                              {(user.role === "manager" || user.role === "admin") && (
+                                <select
+                                  className="form-select form-select-sm border-0 bg-light"
+                                  value={t.assigneeId?._id || t.assigneeId || ""}
+                                  onChange={e => updateTask(t._id, { assigneeId: e.target.value })}
+                                >
+                                  <option value="">Assign to...</option>
+                                  {users.filter(u => u.role !== "admin").map(u => (
+                                    <option key={u._id} value={u._id}>{u.name}</option>
+                                  ))}
+                                </select>
+                              )}
 
-                <div>
-                  <strong>{t.title}</strong>
-                  {t.assigneeId && (
-                    <div className="small text-muted">
-                      Assigned to: {users.find(u => u.id === t.assigneeId)?.name}
+                              <input
+                                type="date"
+                                className="form-control form-control-sm border-0 bg-light"
+                                style={{ width: 'auto' }}
+                                value={t.dueDate ? t.dueDate.split('T')[0] : ""}
+                                onChange={e => updateTask(t._id, { dueDate: e.target.value })}
+                              />
+
+                              <button
+                                className={`btn btn-sm rounded-pill px-3 ${t.status === "Pending" ? "btn-light text-muted" :
+                                  t.status === "In Progress" ? "btn-warning-soft text-warning" : "btn-success-soft text-success"
+                                  }`}
+                                onClick={() => updateTask(t._id, { status: cycleStatus(t.status) })}
+                                style={{ fontSize: '0.75rem' }}
+                              >
+                                {t.status}
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   )}
                 </div>
-
-                <div className="d-flex gap-2">
-                  {user.role === "manager" && (
-                    <select
-                      className="form-select form-select-sm"
-                      value={t.assigneeId || ""}
-                      onChange={e => updateTask(t.id, { ...t, assigneeId: Number(e.target.value) })}
-                    >
-                      <option value="">Assign</option>
-                      {users.filter(u => p.team?.includes(u.id)).map(u => (
-                        <option key={u.id} value={u.id}>{u.name}</option>
-                      ))}
-                    </select>
-                  )}
-
-                  <button
-                    className={`btn btn-sm ${
-                      t.status === "Pending" ? "btn-secondary" :
-                      t.status === "In Progress" ? "btn-warning" : "btn-success"
-                    }`}
-                    onClick={() => updateTask(t.id, { ...t, status: cycleStatus(t.status) })}
-                  >
-                    {t.status}
-                  </button>
-                </div>
-
               </div>
-            ))}
-          </div>
-        );
-      })}
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 };

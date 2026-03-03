@@ -17,7 +17,7 @@ const ManageProjects = () => {
       {projects.length === 0 && <p>No projects created yet.</p>}
 
       {projects.map(p => (
-        <div key={p.id} className="card p-3 mb-3 shadow-sm">
+        <div key={p._id} className="card p-3 mb-3 shadow-sm">
           <div className="d-flex justify-content-between">
             <div>
               <h5>{p.title}</h5>
@@ -26,27 +26,41 @@ const ManageProjects = () => {
             </div>
 
             <div className="d-flex gap-2 align-items-start">
-  <button
-    className="btn btn-primary btn-sm"
-    onClick={() => navigate(`/projects/${p.id}`)}
-  >
-    Open
-  </button>
+              <button
+                className="btn btn-primary btn-sm"
+                onClick={() => navigate(`/projects/${p._id}`)}
+              >
+                Open
+              </button>
 
-  <button
-    className="btn btn-outline-secondary btn-sm"
-    onClick={() => navigate(`/projects/edit/${p.id}`)}
-  >
-    Edit
-  </button> 
+              <button
+                className="btn btn-outline-info btn-sm"
+                onClick={() => navigate(`/projects/${p._id}/tasks`)}
+              >
+                Tasks
+              </button>
 
-  <button
-    className="btn btn-outline-danger btn-sm"
-    onClick={() => deleteProject(p.id)}
-  >
-    Delete
-  </button>
-</div>
+              <button
+                className="btn btn-outline-primary btn-sm"
+                onClick={() => navigate(`/projects/${p._id}/board`)}
+              >
+                Kanban
+              </button>
+
+              <button
+                className="btn btn-outline-secondary btn-sm"
+                onClick={() => navigate(`/projects/edit/${p._id}`)}
+              >
+                Edit
+              </button>
+
+              <button
+                className="btn btn-outline-danger btn-sm"
+                onClick={() => deleteProject(p._id)}
+              >
+                Delete
+              </button>
+            </div>
 
           </div>
         </div>

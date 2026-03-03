@@ -14,13 +14,17 @@ import {
 ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend);
 
 const Analytics = () => {
-  const { tasks } = useTasks();
+  const { allTasks: tasks, loadAllTasks } = useTasks();
   const chartRef = useRef(null);
 
+  useEffect(() => {
+    loadAllTasks();
+  }, [loadAllTasks]);
+
   const stats = {
-    Pending: tasks.filter(t => t.status === "Pending").length,
-    "In Progress": tasks.filter(t => t.status === "In Progress").length,
-    Completed: tasks.filter(t => t.status === "Completed").length
+    Pending: (tasks || []).filter(t => t.status === "Pending").length,
+    "In Progress": (tasks || []).filter(t => t.status === "In Progress").length,
+    Completed: (tasks || []).filter(t => t.status === "Completed").length
   };
 
   const data = {

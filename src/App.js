@@ -38,44 +38,45 @@ function App() {
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Registration />} />
-        <Route path="/admin" element={<AdminDashboard />} />
-        <Route path="/admin/users" element={<MainLayout><UserManagement /></MainLayout>} />
-        <Route path="/projects" element={<ManageProjects />} />
-        <Route path="/projects/edit/:id" element={<EditProject />} />
-        <Route path="/projects/:id/board" element={<KanbanBoard />} />
-
-        
-
-
 
         <Route path="/dashboard" element={
-  <MainLayout>
-    <Dashboard />
-  </MainLayout>
-} />
-
-<Route path="/projects" element={
-  <MainLayout>
-    <ManageProjects />
-  </MainLayout>
-} />
-
-<Route path="/projects/edit/:id" element={
-  <MainLayout>
-    <EditProject />
-  </MainLayout>
-} />
-
+          <MainLayout>
+            <Dashboard />
+          </MainLayout>
+        } />
 
         <Route path="/projects" element={
           <MainLayout>
-            <ProjectList />
+            <ManageProjects />
           </MainLayout>
         } />
 
         <Route path="/projects/new" element={
           <MainLayout>
             <ProjectForm />
+          </MainLayout>
+        } />
+
+        <Route path="/projects/edit/:id" element={
+          <MainLayout>
+            <EditProject />
+          </MainLayout>
+        } />
+
+        <Route path="/projects/:id/board" element={
+          <MainLayout>
+            <KanbanBoard />
+          </MainLayout>
+        } />
+
+        <Route path="/projects/:id/tasks" element={
+          <MainLayout>
+            <ProjectList />
+          </MainLayout>
+        } />
+        <Route path="/projects/:id" element={
+          <MainLayout>
+            <ProjectWorkspace />
           </MainLayout>
         } />
 
@@ -103,19 +104,23 @@ function App() {
           </MainLayout>
         } />
 
-        <Route
-  path="/chat"
-  element={
-    <MainLayout>
-      <Chat />
-    </MainLayout>
-  }
-/>
-<Route path="/projects/:id" element={
-  <MainLayout>
-    <ProjectWorkspace />
-  </MainLayout>
-} />
+        <Route path="/chat/:id?" element={
+          <MainLayout>
+            <Chat />
+          </MainLayout>
+        } />
+
+        <Route path="/admin" element={
+          <MainLayout>
+            <AdminDashboard />
+          </MainLayout>
+        } />
+
+        <Route path="/admin/users" element={
+          <MainLayout>
+            <UserManagement />
+          </MainLayout>
+        } />
 
 
 
